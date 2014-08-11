@@ -1,6 +1,7 @@
 
 
 var svg = document.getElementById('container');
+var svg2 = document.getElementById('part-two');
 
 function Line(){
   return this;
@@ -114,6 +115,8 @@ Circle.prototype.draw = function(svg){
   circle.setAttribute('cx', this.cx);
   circle.setAttribute('cy', this.cy);
   circle.setAttribute('r', this.r);
+  circle.setAttribute('stroke', this.stroke);
+  circle.setAttribute('strokeWidth', this.strokeWidth);
   circle.setAttribute('fill', this.fill);
   svg.appendChild(circle);
   return this;
@@ -234,11 +237,14 @@ new Text()
   .draw(svg);
 
 var nesOuter = new Rectangle()
-  .center(20,280).width(700).height(300).rx(0).ry(0).strokeWidth(20).fill('black').stroke('#e6e7e2').draw(svg);
+  .center(20,280).width(700).height(300).rx(0).ry(0)
+  .strokeWidth(20).fill('black').stroke('#e6e7e2').draw(svg);
 var stickV = new Rectangle()
-  .center(120, 370).width(80).height(170).rx(0).ry(0).strokeWidth(5).fill('black').stroke('#e6e7e2').draw(svg);
+  .center(120, 370).width(80).height(170).rx(0).ry(0)
+  .strokeWidth(5).fill('black').stroke('#e6e7e2').draw(svg);
 var stickH = new Rectangle()
-  .center(75,415).width(170).height(80).rx(0).ry(0).strokeWidth(5).fill('black').stroke('#e6e7e2').draw(svg);
+  .center(75,415).width(170).height(80).rx(0).ry(0)
+  .strokeWidth(5).fill('black').stroke('#e6e7e2').draw(svg);
 var start = new Rectangle()
   .center(280,480).width(150).height(60).fill('#e6e7e2').rx(5).ry(5).draw(svg);
 var gray1 = new Rectangle()
@@ -252,9 +258,9 @@ var leftButtonHolder = new Square()
 var rightButtonHolder = new Square()
   .center(595,507).width(75).rx(5).ry(0).fill('#e6e7e2').draw(svg);
 var leftButtonPad = new Circle()
-  .center(495,507).width(60).fill('red').draw(svg);
+  .center(495,507).width(60).fill('red').stroke('black').strokeWidth(1).draw(svg);
 var rightButtonPad = new Circle()
-  .center(595,507).width(60).fill('red').draw(svg);
+  .center(595,507).width(60).fill('red').stroke('black').strokeWidth(1).draw(svg);
 var selectButton = new Rectangle()
   .center(290,500).width(60).rx(12).ry(12).height(25).fill('black').draw(svg);
 var startButton = new Rectangle()
@@ -269,4 +275,53 @@ var a = new Text()
   .x(620).y(565).text('A').fill('red').fontSize('24').draw(svg);
 var b = new Text()
   .x(520).y(565).text('B').fill('red').fontSize('24').draw(svg);
- 
+// Function to turn JSON data into my own object with years as keys and co2 as values
+// for easier organization and readability
+var getYearlyAverages = function(startYear,endYear){
+  var yearlyAvg = {};
+  for (var j = startYear; j <= endYear; j++) {
+    avg = 0;
+    for (var i = 0; i < co2.length; i++) {
+      if(new Date(co2[i].date).getFullYear()===j){
+        var x = parseFloat(co2[i].level);
+        avg += x;
+        var a = avg/12;
+        yearlyAvg[j] = +a.toFixed(2);
+      }; 
+    };
+  };
+  return yearlyAvg;
+};
+var drawPartTwo = function(canvasWidth, canvasHeight, numLines){
+  // Can't have the bars too skinny
+  if ((canvasWidth / numLines - 10) > 5) {
+    var barWidth = canvasWidth/numLines-10;
+  } else {
+    alert('I can\'t make this fit quite right');
+  }
+  // Feed in data
+  var data = getYearlyAverages(1959,1990);
+  // Get an array of the values 
+  var arr = Object.keys(data).map(function(key){
+    return data[key];
+  });
+  // ... to get the max value out
+  var max = Math.max.apply(null, arr);
+  var barMax = canvasHeight* 0.95;
+  // ... and find out the difference between the data and the desired max-height
+  var difference = (barMax/max);
+  // Mind the gap...
+  var a = 20;
+  var textOffset = 12;
+  // #1, make it so.
+  for (key in data) {
+    new Line().x1(a).y1(barMax).x2(a).y2(600-data[key]*difference)
+    .stroke('cornflowerblue').strokeWidth(barWidth).draw(svg2);
+    new Text().x(a-textOffset).y(canvasHeight).text(key).fill('#333').fontSize('10').draw(svg2);
+    a = a+23;
+  };
+  new Text().x(20).y(40).text('CO2 Emissions Trend (1959 - 1990)').fontSize('14').fill('#333').draw(svg2);
+  new Text().x(20).y(60).text('Slope = .085').fontSize('14').fill('#333').draw(svg2);
+  new Line().x1(15).y1(91).x2(735).y2(30).stroke('#333').strokeWidth(2).draw(svg2)
+}
+drawPartTwo(800,600,31);
